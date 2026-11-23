@@ -1,0 +1,7 @@
+# Entorno único para la API + monitoreo (Actividad 8). Mismas versiones que requirements.txt.
+-r requirements.txt
+mlflow>=3,<4
+matplotlib>=3.8,<4
+requests
+pytest
+httpx

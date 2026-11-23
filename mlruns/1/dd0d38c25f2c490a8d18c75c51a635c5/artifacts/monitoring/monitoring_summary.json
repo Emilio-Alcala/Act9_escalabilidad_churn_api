@@ -1,0 +1,63 @@
+{
+  "project_name": "sierra_movil_churn_api",
+  "window_label": "incidenteB_deteccion",
+  "trace_id": "a1ae122b70df",
+  "generated_at": "2026-11-15T20:11:42",
+  "status": "critical",
+  "recommended_action": "rollback_o_reinicio_de_servicio",
+  "metrics": {
+    "n_requests": 500.0,
+    "latency_p50_ms": 719.837,
+    "latency_p95_ms": 749.5228,
+    "error_rate": 0.0,
+    "invalid_request_rate": 0.0,
+    "service_success_rate": 1.0,
+    "error_budget_burn_rate": 0.0,
+    "error_budget_consumed_pct": 0.0,
+    "contact_rate": 0.524,
+    "mean_probability": 0.2745,
+    "contact_rate_shift_pts": 1.5838,
+    "mean_prob_shift": 0.0066,
+    "drift_psi": 0.0364
+  },
+  "drift_by_feature": {
+    "tenure": 0.0281,
+    "MonthlyCharges": 0.0255,
+    "TotalCharges": 0.0364,
+    "Contract": 0.0028,
+    "InternetService": 0.0053,
+    "PaymentMethod": 0.0003
+  },
+  "stage_p95_ms": {
+    "decision": 0.006,
+    "inference": 731.852,
+    "total": 749.523,
+    "validation": 12.74
+  },
+  "incidents": [
+    {
+      "runbook": "runbooks/RB-02_degradacion_del_servicio.md",
+      "priority": "P1",
+      "action": "rollback_o_reinicio_de_servicio",
+      "metrics": [
+        "latency_p95_ms"
+      ]
+    }
+  ],
+  "alerts": [
+    {
+      "metric": "latency_p95_ms",
+      "value": 749.5228,
+      "severity": "critical",
+      "priority": "P1",
+      "warning_threshold": 200,
+      "critical_threshold": 500,
+      "direction": "max",
+      "consecutive_windows": 1,
+      "required_windows": 1,
+      "runbook": "runbooks/RB-02_degradacion_del_servicio.md",
+      "action": "rollback_o_reinicio_de_servicio"
+    }
+  ],
+  "suppressed_alerts": []
+}

@@ -1,0 +1,91 @@
+{
+  "project_name": "sierra_movil_churn_api",
+  "window_label": "incidenteA_deteccion",
+  "trace_id": "d4ae0a85e71c",
+  "generated_at": "2026-11-15T19:22:15",
+  "status": "critical",
+  "recommended_action": "cuarentena_de_lote_y_evaluar_reentrenamiento",
+  "metrics": {
+    "n_requests": 500.0,
+    "latency_p50_ms": 15.4925,
+    "latency_p95_ms": 24.7347,
+    "error_rate": 0.0,
+    "invalid_request_rate": 0.0,
+    "service_success_rate": 1.0,
+    "error_budget_burn_rate": 0.0,
+    "error_budget_consumed_pct": 0.0,
+    "contact_rate": 0.848,
+    "mean_probability": 0.4668,
+    "contact_rate_shift_pts": 33.9838,
+    "mean_prob_shift": 0.1989,
+    "drift_psi": 0.6836
+  },
+  "drift_by_feature": {
+    "tenure": 0.5094,
+    "MonthlyCharges": 0.1435,
+    "TotalCharges": 0.2543,
+    "Contract": 0.6836,
+    "InternetService": 0.1926,
+    "PaymentMethod": 0.3495
+  },
+  "stage_p95_ms": {
+    "decision": 0.005,
+    "inference": 14.056,
+    "total": 24.735,
+    "validation": 11.8
+  },
+  "incidents": [
+    {
+      "runbook": "runbooks/RB-01_data_drift_y_calidad.md",
+      "priority": "P2",
+      "action": "cuarentena_de_lote_y_evaluar_reentrenamiento",
+      "metrics": [
+        "drift_psi",
+        "contact_rate_shift_pts",
+        "mean_prob_shift"
+      ]
+    }
+  ],
+  "alerts": [
+    {
+      "metric": "drift_psi",
+      "value": 0.6836,
+      "severity": "critical",
+      "priority": "P2",
+      "warning_threshold": 0.1,
+      "critical_threshold": 0.25,
+      "direction": "max",
+      "consecutive_windows": 1,
+      "required_windows": 1,
+      "runbook": "runbooks/RB-01_data_drift_y_calidad.md",
+      "action": "cuarentena_de_lote_y_evaluar_reentrenamiento"
+    },
+    {
+      "metric": "contact_rate_shift_pts",
+      "value": 33.9838,
+      "severity": "critical",
+      "priority": "P2",
+      "warning_threshold": 10,
+      "critical_threshold": 20,
+      "direction": "max",
+      "consecutive_windows": 1,
+      "required_windows": 1,
+      "runbook": "runbooks/RB-01_data_drift_y_calidad.md",
+      "action": "cuarentena_de_lote_y_evaluar_reentrenamiento"
+    },
+    {
+      "metric": "mean_prob_shift",
+      "value": 0.1989,
+      "severity": "critical",
+      "priority": "P2",
+      "warning_threshold": 0.05,
+      "critical_threshold": 0.1,
+      "direction": "max",
+      "consecutive_windows": 1,
+      "required_windows": 1,
+      "runbook": "runbooks/RB-01_data_drift_y_calidad.md",
+      "action": "cuarentena_de_lote_y_evaluar_reentrenamiento"
+    }
+  ],
+  "suppressed_alerts": []
+}

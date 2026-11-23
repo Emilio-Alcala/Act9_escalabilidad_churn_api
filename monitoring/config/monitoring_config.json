@@ -1,0 +1,112 @@
+{
+  "project_name": "sierra_movil_churn_api",
+  "modality": "tabular_churn",
+  "service": {
+    "success_rate_target": 0.95,
+    "window_size": 500
+  },
+  "drift_features": {
+    "numeric": [
+      "tenure",
+      "MonthlyCharges",
+      "TotalCharges"
+    ],
+    "categorical": [
+      "Contract",
+      "InternetService",
+      "PaymentMethod"
+    ]
+  },
+  "thresholds": {
+    "latency_p95_ms": {
+      "direction": "max",
+      "warning": 200,
+      "critical": 500,
+      "priority": {
+        "warning": "P3",
+        "critical": "P1"
+      },
+      "runbook": "runbooks/RB-02_degradacion_del_servicio.md",
+      "action": "rollback_o_reinicio_de_servicio",
+      "why": "SLO: el 95% de las predicciones responde en < 200 ms. Con p95 >= 500 ms el formulario se siente roto para el usuario."
+    },
+    "error_budget_burn_rate": {
+      "direction": "max",
+      "warning": 0.5,
+      "critical": 1.0,
+      "priority": {
+        "warning": "P3",
+        "critical": "P1"
+      },
+      "runbook": "runbooks/RB-02_degradacion_del_servicio.md",
+      "action": "rollback_o_reinicio_de_servicio",
+      "why": "SLO de exito >= 95% => error budget de 5%. burn rate = tasa de error 5xx / 5%. 0.5 = mitad del presupuesto consumido en la ventana; 1.0 = presupuesto agotado."
+    },
+    "drift_psi": {
+      "direction": "max",
+      "warning": 0.1,
+      "critical": 0.25,
+      "priority": {
+        "warning": "P3",
+        "critical": "P2"
+      },
+      "runbook": "runbooks/RB-01_data_drift_y_calidad.md",
+      "action": "cuarentena_de_lote_y_evaluar_reentrenamiento",
+      "why": "Convencion de la industria para PSI: < 0.10 estable, 0.10-0.25 cambio moderado, > 0.25 cambio significativo. Se toma el PSI maximo entre las variables vigiladas."
+    },
+    "contact_rate_shift_pts": {
+      "direction": "max",
+      "warning": 10,
+      "critical": 20,
+      "priority": {
+        "warning": "P3",
+        "critical": "P2"
+      },
+      "runbook": "runbooks/RB-01_data_drift_y_calidad.md",
+      "action": "cuarentena_de_lote_y_evaluar_reentrenamiento",
+      "why": "Puntos porcentuales que se desvia el % de clientes a contactar respecto al 50.8% de referencia. Cada punto de mas son mas contactos de $46 MXN: afecta el costo de la campana."
+    },
+    "mean_prob_shift": {
+      "direction": "max",
+      "warning": 0.05,
+      "critical": 0.1,
+      "priority": {
+        "warning": "P3",
+        "critical": "P2"
+      },
+      "runbook": "runbooks/RB-01_data_drift_y_calidad.md",
+      "action": "cuarentena_de_lote_y_evaluar_reentrenamiento",
+      "why": "Desviacion absoluta de la probabilidad media respecto a 0.268 (referencia). Senal temprana de cambio en lo que el modelo 've', sin esperar etiquetas."
+    },
+    "recall": {
+      "direction": "min",
+      "warning": 0.8,
+      "critical": 0.7,
+      "priority": {
+        "warning": "P3",
+        "critical": "P1"
+      },
+      "runbook": "runbooks/RB-01_data_drift_y_calidad.md",
+      "action": "cuarentena_de_lote_y_evaluar_reentrenamiento",
+      "why": "Referencia 0.874. El valor del modelo es capturar a quien se va (beneficio $244.80 vs costo $46); si el recall cae, se pierden clientes que se podian retener. Solo se evalua cuando hay etiquetas (llegan tarde)."
+    }
+  },
+  "noise_control": {
+    "persistence_windows": {
+      "warning": 2,
+      "critical": 1
+    }
+  },
+  "mlflow": {
+    "enabled": true,
+    "experiment_name": "Actividad8_Churn_Monitoreo"
+  },
+  "response_policy": {
+    "auto_execute_severity": "critical",
+    "cooldown_minutes_rollback": 30,
+    "contact_budget_pct": "reference",
+    "cost_per_contact_mxn": 46.0,
+    "benefit_per_retained_mxn": 244.8,
+    "max_open_retraining_requests": 1
+  }
+}

@@ -1,0 +1,16 @@
+﻿id,tipo,descripcion,http_esperado,http_obtenido,probabilidad,nivel,prediccion,latencia_ms,resultado
+BAS,base,Perfil base estándar de referencia,200,200,0.0474,Bajo,0,27.2,PASA
+F01,funcional,"Cliente fiel: contrato 2 años, 72 meses, DSL",200,200,0.0024,Bajo,0,29.8,PASA
+F02,funcional,"Cliente en riesgo (real, conjunto de prueba 9611-CTWIH, churn=1)",200,200,0.7792,Alto,1,60.6,PASA
+F03,funcional,"Cliente intermedio: contrato 1 año, 24 meses (Perfil Base estándar)",200,200,0.0474,Bajo,0,35.6,PASA
+E01,extremo,Cliente nuevo: tenure=0 y TotalCharges=0,200,200,0.2037,Medio,1,28.2,PASA
+E02,extremo,"Límite superior de datos: tenure=72, cargos máximos",200,200,0.0003,Bajo,0,37.8,PASA
+E03,extremo,Cargo mensual mínimo (18.25) sin internet,200,200,0.0422,Bajo,0,24.2,PASA
+E04,extremo,"Peor perfil posible: mes a mes, fibra, cheque electrónico, 1 mes",200,200,0.2988,Medio,1,26.0,PASA
+E05,extremo,Inconsistente: tenure=0 pero TotalCharges=5000,200,200,0.3127,Medio,1,39.0,PASA
+I01,inválido,tenure negativo,422,422,,,,22.4,PASA
+I02,inválido,Categoría inexistente en Contract,422,422,,,,13.8,PASA
+I03,inválido,Campo faltante (sin MonthlyCharges),422,422,,,,13.1,PASA
+I04,inválido,Texto en campo numérico,422,422,,,,12.8,PASA
+I05,inválido,TotalCharges absurdo (1e9),422,422,,,,10.7,PASA
+I06,inválido,Cuerpo vacío,422,422,,,,12.3,PASA

@@ -1,0 +1,40 @@
+{
+  "project_name": "sierra_movil_churn_api",
+  "window_label": "incidenteA_recuperacion_2",
+  "trace_id": "e9a77b171371",
+  "generated_at": "2026-11-15T19:41:07",
+  "status": "ok",
+  "recommended_action": "continuar_monitoreo",
+  "metrics": {
+    "n_requests": 500.0,
+    "latency_p50_ms": 20.1565,
+    "latency_p95_ms": 33.7723,
+    "error_rate": 0.0,
+    "invalid_request_rate": 0.0,
+    "service_success_rate": 1.0,
+    "error_budget_burn_rate": 0.0,
+    "error_budget_consumed_pct": 0.0,
+    "contact_rate": 0.502,
+    "mean_probability": 0.267,
+    "contact_rate_shift_pts": 0.6162,
+    "mean_prob_shift": 0.0009,
+    "drift_psi": 0.0354
+  },
+  "drift_by_feature": {
+    "tenure": 0.0148,
+    "MonthlyCharges": 0.0282,
+    "TotalCharges": 0.0354,
+    "Contract": 0.0001,
+    "InternetService": 0.0002,
+    "PaymentMethod": 0.0007
+  },
+  "stage_p95_ms": {
+    "decision": 0.008,
+    "inference": 22.378,
+    "total": 33.772,
+    "validation": 12.391
+  },
+  "incidents": [],
+  "alerts": [],
+  "suppressed_alerts": []
+}

@@ -1,0 +1,15 @@
+[
+  {
+    "metric": "latency_p95_ms",
+    "value": 749.5228,
+    "severity": "critical",
+    "priority": "P1",
+    "warning_threshold": 200,
+    "critical_threshold": 500,
+    "direction": "max",
+    "consecutive_windows": 1,
+    "required_windows": 1,
+    "runbook": "runbooks/RB-02_degradacion_del_servicio.md",
+    "action": "rollback_o_reinicio_de_servicio"
+  }
+]

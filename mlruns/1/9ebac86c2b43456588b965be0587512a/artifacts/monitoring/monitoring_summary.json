@@ -1,0 +1,40 @@
+{
+  "project_name": "sierra_movil_churn_api",
+  "window_label": "normal_2",
+  "trace_id": "6b0a7e89b33d",
+  "generated_at": "2026-11-15T18:57:03",
+  "status": "ok",
+  "recommended_action": "continuar_monitoreo",
+  "metrics": {
+    "n_requests": 500.0,
+    "latency_p50_ms": 15.2095,
+    "latency_p95_ms": 23.7312,
+    "error_rate": 0.0,
+    "invalid_request_rate": 0.0,
+    "service_success_rate": 1.0,
+    "error_budget_burn_rate": 0.0,
+    "error_budget_consumed_pct": 0.0,
+    "contact_rate": 0.516,
+    "mean_probability": 0.2694,
+    "contact_rate_shift_pts": 0.7838,
+    "mean_prob_shift": 0.0015,
+    "drift_psi": 0.0477
+  },
+  "drift_by_feature": {
+    "tenure": 0.0222,
+    "MonthlyCharges": 0.0477,
+    "TotalCharges": 0.0177,
+    "Contract": 0.0024,
+    "InternetService": 0.0021,
+    "PaymentMethod": 0.0023
+  },
+  "stage_p95_ms": {
+    "decision": 0.005,
+    "inference": 13.733,
+    "total": 23.731,
+    "validation": 11.67
+  },
+  "incidents": [],
+  "alerts": [],
+  "suppressed_alerts": []
+}

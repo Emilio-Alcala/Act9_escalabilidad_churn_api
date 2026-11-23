@@ -2,7 +2,7 @@
 
 Servicio de inferencia contenerizado (FastAPI + Docker) que publica el modelo final de la Actividad 6 para decidir a qué clientes de **Sierra Móvil** (empresa ficticia de telecomunicaciones) conviene contactar con una oferta de retención.
 
-**Fase II – Despliegue local y en la nube**.
+**Fase II – Despliegue local y en la nube** · **Actividad 8 – Monitoreo y observabilidad** · **Actividad 9 – Escalabilidad, FinOps y gobernanza**.
 
 ## Contenido
 
@@ -14,6 +14,8 @@ Servicio de inferencia contenerizado (FastAPI + Docker) que publica el modelo fi
 6. [Run (ejecución)](#6-run-ejecución)
 7. [Pruebas](#7-pruebas)
 8. [Documentación](#8-documentación)
+9. [Monitoreo y observabilidad (Actividad 8)](#9-monitoreo-y-observabilidad-actividad-8)
+10. [Escalabilidad, FinOps y gobernanza (Actividad 9)](#10-escalabilidad-finops-y-gobernanza-actividad-9)
 
 ---
 
@@ -121,6 +123,8 @@ El archivo `model/model.skops` de este repositorio es el modelo de la regresión
 - Imagen Docker reproducible con versiones fijadas (las mismas del entrenamiento).
 - 18 pruebas automatizadas y 14 casos contra el servicio en ejecución; la API reproduce el recall 0.874 y la precisión 0.457 de la Actividad 6.
 - Manual de despliegue en la nube y documento de validación y pruebas.
+- **Actividad 8:** observabilidad de la API (logs y trazas JSONL), métricas, SLO, alertas con runbooks y respuesta controlada ([sección 9](#9-monitoreo-y-observabilidad-actividad-8)).
+- **Actividad 9:** prueba de carga, benchmark de lote, rediseño de arquitectura, análisis de costos, auditoría de fairness y plan de escalamiento ([sección 10](#10-escalabilidad-finops-y-gobernanza-actividad-9)).
 
 ---
 
@@ -169,6 +173,7 @@ sierra-movil-churn-api/
 ├── app/
 │   ├── __init__.py
 │   ├── main.py                       # API FastAPI (endpoints, validación, decisión por umbral)
+│   ├── observabilidad.py             # Actividad 8: middleware de logs/trazas y falla simulada
 │   └── static/
 │       └── index.html                # Frontend: formulario que consume /predict
 ├── model/
@@ -176,19 +181,42 @@ sierra-movil-churn-api/
 │   └── input_example.json            # Ejemplo de entrada registrado en MLflow
 ├── tests/
 │   ├── casos.py                      # Casos funcionales (F), extremos (E) e inválidos (I)
-│   ├── test_api.py                   # Pruebas automatizadas con pytest (18)
+│   ├── conftest.py                   # Configuración de pytest
+│   ├── test_api.py                   # Pruebas automatizadas con pytest de la API
+│   ├── test_observabilidad.py        # Pruebas del middleware de observabilidad (Actividad 8)
 │   ├── pruebas_api.py                # Casos contra el servicio en ejecución -> CSV de resultados
 │   └── data/
 │       └── conjunto_prueba_act6.csv  # 1,409 clientes del conjunto de prueba de la Actividad 6
+├── monitoring/                       # Actividad 8 (ver sección 9)
+│   ├── README.md                     # Guía corta del monitoreo
+│   ├── config/monitoring_config.json # SLO, umbrales, prioridad, runbook y acción por métrica
+│   ├── control/                      # runtime_config.json (falla simulada) y known_good_config.json (rollback)
+│   ├── data/                         # raw/, baseline_train.csv, labels_delayed.csv, reference_stats.json, windows/
+│   ├── logs/                         # api_requests.jsonl y api_traces.jsonl (no se versionan)
+│   ├── outputs/                      # alertas, historial, bitácoras, dashboard.png, runs/
+│   ├── runbooks/                     # RB-01 (drift y calidad), RB-02 (degradación del servicio)
+│   ├── src/                          # prepare_data, traffic_simulator, monitor, dashboard, respond, inject_fault
+│   └── evidencia/                    # Capturas de la Actividad 8
+├── escalabilidad/                    # Actividad 9 (ver sección 10)
+│   ├── readme_escalabilidad.md       # Documentación detallada de la actividad
+│   ├── load_test.py                  # Prueba de carga de la API
+│   ├── bench_batch.py                # Benchmark de scoring por lotes
+│   ├── resultados_carga.csv
+│   ├── resultados_lote.csv
+│   ├── Anexo_tecnico_Actividad_09.xlsx
+│   ├── Diagrama_arquitectura_actual_vs_propuesta.png
+│   └── carga_logs/                   # JSONL generados durante la prueba de carga
 ├── docs/
 │   ├── Manual_Despliegue_Nube.pdf    # Manual de despliegue en la nube
 │   ├── Validacion_y_Pruebas.pdf      # Documento de validación y pruebas
+│   ├── PIA - Reporte_11_Actividad_09.docx  # Reporte técnico de la Actividad 9
 │   └── evidencias/                   # Capturas y resultados_pruebas.csv
 ├── Dockerfile                        # Imagen: python:3.14-slim, usuario sin privilegios, HEALTHCHECK
 ├── .dockerignore                     # Excluye tests, docs, .git y temporales de la imagen
 ├── .gitignore
 ├── requirements.txt                  # Dependencias de ejecución (para producción)
 ├── requirements-dev.txt              # Incluye requirements.txt + pytest, httpx, requests (para pruebas de desarrollo)
+├── requirements-monitoring.txt       # Incluye requirements.txt + mlflow, matplotlib, requests, pytest, httpx (Actividad 8)
 └── README.md
 ```
 
@@ -298,8 +326,95 @@ python tests/pruebas_api.py http://localhost:8000      # 14 casos contra el serv
 | Documento de validación y pruebas (casos funcionales y extremos, paridad con la Actividad 6, hallazgos y conclusiones) | [`docs/Validacion_y_Pruebas.pdf`](docs/Validacion_y_Pruebas.pdf) |
 | Evidencias (capturas y resultados por caso) | [`docs/evidencias/`](docs/evidencias/) |
 
+---
+
+## 9. Monitoreo y observabilidad (Actividad 8)
+
+Instrumenta la API y calcula métricas, SLO, alertas con prioridad, control de ruido y evidencia en MLflow. Guía corta en [`monitoring/README.md`](monitoring/README.md).
+
+```text
+traffic_simulator.py --POST /predict--> API (app/observabilidad.py) --> logs/api_requests.jsonl  (LOGS)
+                                                                    --> logs/api_traces.jsonl    (TRAZAS por etapa)
+monitor.py lee la última ventana -> métricas -> umbrales/SLO -> control de ruido -> alertas + runbook + acción
+                                 -> outputs/*.json + MLflow
+```
+
+**Qué mide.** Latencia (p95), tasa de éxito y consumo del presupuesto de error, deriva de datos (PSI sobre `tenure`, `MonthlyCharges`, `TotalCharges`, `Contract`, `InternetService` y `PaymentMethod`), comportamiento del modelo y, cuando llegan las etiquetas, calidad (recall y precisión). Cada ventana es de 500 solicitudes.
+
+**SLO.** p95 de latencia menor a 200 ms (warning a 200 ms, crítico a 500 ms) y tasa de éxito de al menos 95%. Los umbrales, su justificación, la prioridad (P1 a P3), el runbook y la acción de cada métrica están en `monitoring/config/monitoring_config.json`. Un warning solo alerta si persiste en varias ventanas (control de ruido).
+
+**Preparación (una vez, desde la raíz, con el entorno virtual activo)**
+
+```powershell
+python -m pip install -r requirements-monitoring.txt
+# copiar telco_churn_limpio.csv a monitoring\data\raw\
+python monitoring\src\prepare_data.py
+```
+
+**Flujo normal**
+
+```powershell
+# Terminal 1: API
+python -m uvicorn app.main:app --port 8000
+# Terminal 2: tráfico, monitor y dashboard
+python monitoring\src\traffic_simulator.py --window monitoring\data\windows\normal_1.csv
+python monitoring\src\monitor.py --window-label normal_1 --reset-history
+python monitoring\src\dashboard.py            # genera monitoring\outputs\dashboard.png
+```
+
+Para evaluar calidad con etiquetas tardías: `python monitoring\src\monitor.py --window-label normal_1 --labels monitoring\data\labels_delayed.csv`. Para ver las corridas: `mlflow ui --backend-store-uri sqlite:///monitoring/mlflow.db`.
+
+**Incidentes y respuesta**
+
+| Incidente | Cómo se provoca | Respuesta |
+|---|---|---|
+| A: deriva de datos | Ventana `drift_1.csv` con `traffic_simulator.py` | RB-01: `respond.py` pone el lote en cuarentena, limita los contactos al presupuesto de campaña y abre una solicitud de reentrenamiento (nunca despliega un modelo solo; requiere aprobación humana) |
+| B: latencia alta | `python monitoring\src\inject_fault.py --latency-ms 700` | RB-02: rollback a `control/known_good_config.json`; la falla se quita con `inject_fault.py --clear` |
+
+`respond.py` corre en modo simulación por defecto; solo aplica la respuesta con `--execute`.
+
+| Archivo | Función |
+|---|---|
+| `app/observabilidad.py` | Middleware, cronómetro por etapas y falla simulada. Variables de entorno opcionales: `MONITOR_ENABLED=0` (apaga el registro), `MONITOR_LOG_DIR=<ruta>` (carpeta de los JSONL), `INJECT_LATENCY_MS=<ms>` (falla simulada, apagada por defecto) |
+| `monitoring/src/prepare_data.py` | Baseline (5,634 filas de entrenamiento), referencia del modelo y ventanas de tráfico |
+| `monitoring/src/traffic_simulator.py` | Envía una ventana de 500 clientes a `/predict` |
+| `monitoring/src/monitor.py` | Métricas, alertas, control de ruido, MLflow y evidencia en `monitoring/outputs/` |
+| `monitoring/src/dashboard.py` | Dashboard operativo en una imagen (`--last N` para las últimas N ventanas) |
+| `monitoring/src/respond.py` | Respuesta controlada a alertas críticas (cuarentena, rollback) |
+| `monitoring/src/inject_fault.py` | Inyecta o quita latencia sin reiniciar la API (`--latency-ms`, `--clear`, `--status`) |
+
+---
+
+## 10. Escalabilidad, FinOps y gobernanza (Actividad 9)
+
+Analiza cómo escalar el sistema de forma sostenible y responsable: mide el desempeño, rediseña la arquitectura, estima costos, audita el sesgo del modelo y propone un plan por etapas. Documentación detallada: [`escalabilidad/readme_escalabilidad.md`](escalabilidad/readme_escalabilidad.md); reporte completo: `docs/PIA - Reporte_11_Actividad_09.docx`.
+
+**Ejecución (con el entorno virtual activo, desde la raíz)**
+
+```powershell
+# Prueba de carga: con la API levantada (usar 127.0.0.1; en Windows "localhost" puede añadir latencia por IPv6)
+python escalabilidad\load_test.py --url http://127.0.0.1:8000 --seconds 20 --levels 1,5,10,20 --pid <PID> --out escalabilidad\resultados_carga.csv
+
+# Benchmark de scoring por lotes (400,000 clientes por defecto)
+python escalabilidad\bench_batch.py
+```
+
+Para guardar los logs de la prueba en `escalabilidad/carga_logs/`, levantar la API con `MONITOR_LOG_DIR=escalabilidad/carga_logs`. `load_test.py` usa solo la biblioteca estándar (`psutil` es opcional y habilita CPU y RAM).
+
+**Hallazgos principales**
+
+- Con un proceso, la API cumple p95 < 200 ms hasta 5 clientes concurrentes (59.6 req/s) y lo rebasa con 10 (65.1 req/s y p95 de 219.5 ms). El tope medido es de unos 100 req/s, con ~17 ms de CPU por solicitud y ~250 MB de RAM por proceso.
+- El cuello de botella no es la API interactiva sino puntuar toda la base a través de ella: 400,000 clientes toman unas 1.9 h en la laptop. El scoring vectorizado por lotes los procesa en menos de 3 s, entre ~4,200 y ~7,100 veces más rápido.
+- Rediseño propuesto: AWS App Runner (0.5 vCPU y 1 GB, de 2 a 6 instancias, HTTPS y API key) para la API y una tarea programada en ECS Fargate para el lote, con logs y artefactos centralizados. Costo estimado de unos $57 USD al mes en los escenarios 1×, 5× y 20× (precios de noviembre de 2026, supuestos en el Anexo técnico).
+- El costo dominante son las campañas ($46 MXN por contacto), no la nube: el tope de contactos del 15% evita $6.59 M MXN al año a 1× frente al umbral 0.188 sobre toda la base.
+- Fairness (1,409 clientes de prueba): sin disparidad relevante por género; los adultos mayores reciben 1.7× más contactos con el umbral 0.188; con el top 15%, el recall de clientes con dependientes es 0.20. Retirar `Partner` y `Dependents` no cambia el AUC (0.842 contra 0.841), pero tampoco cierra la brecha.
+- Plan de escalamiento por etapas con compuertas técnicas, de costo y de equidad: Preparación, Piloto (10%), Operación 1×, Crecimiento 5× y Estrés 20×, con reversión mediante `respond.py`.
+
+**Alcance.** La carga se midió en una laptop (una corrida de 20 s por nivel); los costos y la capacidad en AWS son estimaciones y el rediseño no se desplegó en la nube. Los datos son públicos y simulan a Sierra Móvil.
+
 ## Limitaciones
 
 - El modelo se entrenó con el dataset público IBM Telco; Sierra Móvil es una empresa ficticia.
 - La API no valida la coherencia entre variables (por ejemplo, `tenure = 0` con `TotalCharges` alto).
-- Sin autenticación ni HTTPS en la versión local; en producción iría detrás de un gateway o de un PaaS con HTTPS.
+- Sin autenticación ni HTTPS en la versión local; en producción iría detrás de un gateway o de un PaaS con HTTPS (el rediseño de la Actividad 9 propone HTTPS y API key).
+- El monitoreo corre sobre tráfico simulado y la prueba de carga se midió solo en local; el rediseño de la Actividad 9 no se desplegó en AWS.
